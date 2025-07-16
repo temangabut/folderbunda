@@ -117,8 +117,8 @@ def edit_first_300_words_with_gemini(post_id, post_title, full_text_content):
 
     try:
         prompt = (
-            f"Cerita Berikut adalah cuplikan dari 300 kata pertama dari cerita utuhnya, Perbaiki tata bahasa, ejaan, dan tingkatkan keterbacaan paragraf berikut. "
-            f"Paraphrase signifikan setiap kata, dan buat agar lebih mengalir sehingga 300 kata pertama ini beda dari aslinya, gunakan bahasa informal dan lugas :\n\n"
+            f"Cerita Berikut adalah cuplikan dari 300 kata pertama dari cerita utuhnya "
+            f"Paraphrase signifikan setiap kata, sehingga 300 kata pertama ini beda dari aslinya, gunakan bahasa informal dan lugas :\n\n"
             f"{first_300_words_original_string}"
         )
 
