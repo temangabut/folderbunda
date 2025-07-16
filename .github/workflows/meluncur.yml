@@ -1,0 +1,47 @@
+name: Auto Publish WP to Blogger Daily
+
+on:
+  schedule:
+    # Runs every day at 00:00 UTC (7:00 AM WIB, mengingat Sukabumi GMT+7)
+    # Sesuaikan '0 0 * * *' jika kamu ingin waktu lain dalam format Cron.
+    # Contoh: '0 7 * * *' untuk jam 7 pagi UTC (jam 2 siang WIB)
+    - cron: '0 0 * * *'
+
+  workflow_dispatch: # Memungkinkan kamu menjalankan workflow secara manual dari tab Actions di GitHub
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Atau versi Python spesifik yang kamu mau, misal '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip # Pastikan pip terbaru
+        pip install -r requirements.txt      # Instal semua dependensi dari requirements.txt
+
+    - name: Run script to publish to Blogger
+      env:
+        # Rahasia ini HARUS kamu tambahkan di Settings -> Secrets -> Actions di repo GitHub-mu.
+        # Ingat, GANTI DARI SERVICE ACCOUNT KE OAUTH 2.0 SECRETS!
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}         # Baru untuk OAuth
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # Baru untuk OAuth
+        GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }} # Baru untuk OAuth
+      run: python publish_wp_to_blogger.py # Sudah disesuaikan dengan nama file-mu
+
+    - name: Commit and push updated published_posts.json
+      # Ini penting untuk menyimpan state postingan yang sudah diterbitkan
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add published_posts.json
+        git commit -m "Update published posts state" || echo "No changes to commit"
+        git push || echo "No changes to push"
