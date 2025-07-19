@@ -226,26 +226,75 @@ def get_blogger_service_with_oauth():
 def publish_post_to_blogger(blogger_service, blog_id, title, content_markdown, tags=None, random_image_url=None):
     """
     Menerbitkan postingan ke Blogger dari konten Markdown,
-    dengan opsi menambahkan gambar acak di awal.
+    dengan opsi menambahkan gambar acak di awal dan menambahkan tag <details>
+    setelah 15 paragraf pertama dengan gaya tombol novel.
     """
     print(f"🚀 Menerbitkan '{title}' ke Blogger...")
 
     # Konversi Markdown ke HTML
     content_html = markdown.markdown(content_markdown)
 
+    # Pisahkan konten menjadi paragraf
+    paragraphs = content_html.split('\n\n')
+
+    first_15_paragraphs = paragraphs[:15]
+    remaining_paragraphs = paragraphs[15:]
+
+    final_content_for_blogger = ""
+
     # Tambahkan gambar acak di awal konten jika ada
     if random_image_url:
-        # Gunakan tag <p> untuk memastikan gambar berada di paragraf terpisah dan di tengah
         image_html = f'<p style="text-align: center;"><img src="{random_image_url}" alt="{title}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px;"></p>'
-        content_html = image_html + "\n" + content_html
+        final_content_for_blogger += image_html + "\n"
         print(f"🖼️ Gambar acak '{random_image_url}' ditambahkan ke artikel.")
+
+    # Gabungkan 15 paragraf pertama
+    final_content_for_blogger += '\n\n'.join(first_15_paragraphs)
+
+    # Tambahkan tag <details> jika ada sisa paragraf
+    if remaining_paragraphs:
+        print("📝 Menambahkan tag <details> untuk sisa konten setelah 15 paragraf dengan gaya tombol novel.")
+        # Gaya CSS untuk tombol summary
+        summary_style = (
+            "display: block; "
+            "cursor: pointer; "
+            "background-color: #4CAF50; " # Warna hijau
+            "color: white; "
+            "padding: 10px 20px; "
+            "margin: 20px auto; " # Tengah dan spasi
+            "border: none; "
+            "border-radius: 5px; "
+            "font-size: 16px; "
+            "font-weight: bold; "
+            "text-align: center; "
+            "max-width: 250px; " # Lebar maksimum tombol
+            "box-shadow: 0 4px 8px rgba(0,0,0,0.2); "
+            "-webkit-user-select: none; " # Non-selektif teks
+            "-moz-user-select: none; "
+            "-ms-user-select: none; "
+            "user-select: none; "
+            "transition: background-color 0.3s ease, box-shadow 0.3s ease; "
+            "font-family: 'Arial', sans-serif;" # Font yang lebih umum dan rapi
+        )
+        
+        # Anda bisa menambahkan efek hover dengan JavaScript jika diperlukan,
+        # tetapi ini akan membutuhkan injeksi script terpisah atau fitur Blogger yang mendukungnya.
+        # Untuk inline style, efek hover murni CSS tidak mungkin langsung pada <summary>.
+        # Namun, kita bisa menggunakan pseudo-class :hover di stylesheet global Blogger.
+        # Untuk saat ini, kita fokus pada tampilan dasar.
+
+        final_content_for_blogger += f'\n\n<details><summary style="{summary_style}">Baca Selengkapnya &#9660;</summary>\n' # Unicode untuk panah ke bawah
+        final_content_for_blogger += '\n\n'.join(remaining_paragraphs)
+        final_content_for_blogger += '\n</details>'
+    else:
+        print("💡 Kurang dari 15 paragraf, tag <details> tidak ditambahkan.")
 
     # Buat payload postingan
     post_body = {
         'kind': 'blogger#post',
         'blog': {'id': blog_id},
         'title': title,
-        'content': content_html,
+        'content': final_content_for_blogger,
         'labels': tags if tags else []
     }
 
@@ -291,7 +340,7 @@ def fetch_all_and_process_posts():
                     break
                 else:
                     raise Exception(f"Error: Gagal mengambil data dari WordPress REST API: {res.status_code} - {res.text}. "
-                                    f"Pastikan URL API Anda benar dan dapat diakses.")
+                                     f"Pastikan URL API Anda benar dan dapat diakses.")
             elif res.status_code != 200:
                 raise Exception(f"Error: Gagal mengambil data dari WordPress REST API: {res.status_code} - {res.text}. "
                                 f"Pastikan URL API Anda benar dan dapat diakses.")
