@@ -9,32 +9,24 @@ import markdown
 import google.generativeai as genai
 
 # --- Konfigurasi ---
-# URL API WORDPRESS SUMBER (tempat artikel diambil)
 API_SOURCE_URL = "https://kisah69.blog/wp-json/wp/v2/posts"
-# URL API WORDPRESS TARGET (tempat artikel akan diposting)
 WP_TARGET_API_URL = "https://cerita.mywp.info/wp-json/wp/v2/posts"
 
-STATE_FILE = 'artikel_terbit.json' # File untuk melacak postingan yang sudah diterbitkan
-RANDOM_IMAGES_FILE = 'random_images.json' # File untuk URL gambar acak
+STATE_FILE = 'artikel_terbit.json'
+RANDOM_IMAGES_FILE = 'random_images.json'
 
-# --- Konfigurasi Gemini API ---
-GEMINI_API_KEY_CONTENT = os.getenv("GEMINI_API_KEY_CONTENT")
-if not GEMINI_API_KEY_CONTENT:
+# --- Konfigurasi Gemini API (Satu Key Saja) ---
+# Gunakan hanya satu API key untuk semua operasi Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_CONTENT") # <-- Kita akan menggunakan ini saja
+if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY_CONTENT environment variable not set. Please set it in your GitHub Secrets or local environment.")
 
-GEMINI_API_KEY_TITLE = os.getenv("GEMINI_API_KEY_TITLE")
-if not GEMINI_API_KEY_TITLE:
-    raise ValueError("GEMINI_API_KEY_TITLE environment variable not set. Please set it in your GitHub Secrets or local environment.")
+# Konfigurasi API key secara global untuk semua model Gemini
+genai.configure(api_key=GEMINI_API_KEY)
 
-# Buat model dengan API Key masing-masing menggunakan client_options
-gemini_model_content = genai.GenerativeModel(
-    "gemini-1.5-flash",
-    client_options={"api_key": GEMINI_API_KEY_CONTENT}
-)
-gemini_model_title = genai.GenerativeModel(
-    "gemini-1.5-flash",
-    client_options={"api_key": GEMINI_API_KEY_TITLE}
-)
+# Buat model TANPA client_options lagi
+gemini_model_content = genai.GenerativeModel("gemini-1.5-flash")
+gemini_model_title = genai.GenerativeModel("gemini-1.5-flash") # Model judul juga akan menggunakan API key yang sama
 
 # --- Konfigurasi Kredensial WordPress Target ---
 WP_USERNAME = os.getenv('WP_USERNAME')
@@ -57,19 +49,12 @@ REPLACEMENT_MAP = {
 # === Utilitas ===
 
 def extract_first_image_url(html_content):
-    """
-    Mencari URL gambar pertama di dalam konten HTML.
-    """
     match = re.search(r'<img[^>]+src="([^"]+)"', html_content, re.IGNORECASE)
     if match:
         return match.group(1)
     return None
 
 def strip_html_and_divs(html):
-    """
-    Menghapus sebagian besar tag HTML, kecuali yang esensial,
-    dan mengganti </p> dengan dua newline untuk pemisahan paragraf.
-    """
     html_with_newlines = re.sub(r'</p>', r'\n\n', html, flags=re.IGNORECASE)
     html_no_images = re.sub(r'<img[^>]*>', '', html_with_newlines)
     html_no_divs = re.sub(r'</?div[^>]*>', '', html_no_images, flags=re.IGNORECASE)
@@ -78,16 +63,13 @@ def strip_html_and_divs(html):
     return clean_text
 
 def remove_anchor_tags(html_content):
-    """Menghapus tag <a> tapi mempertahankan teks di dalamnya."""
     return re.sub(r'<a[^>]*>(.*?)<\/a>', r'\1', html_content)
 
 def sanitize_filename(title):
-    """Membersihkan judul agar cocok untuk nama file."""
     clean_title = re.sub(r'[^\w\s-]', '', title).strip().lower()
     return re.sub(r'[-\s]+', '-', clean_title)
 
 def replace_custom_words(text):
-    """Menerapkan penggantian kata khusus pada teks."""
     processed_text = text
     sorted_replacements = sorted(REPLACEMENT_MAP.items(), key=lambda item: len(item[0]), reverse=True)
     for old_word, new_word in sorted_replacements:
@@ -96,14 +78,10 @@ def replace_custom_words(text):
     return processed_text
 
 def edit_title_with_gemini(original_title):
-    """
-    Mengirim judul artikel ke Gemini AI untuk diedit agar lebih menarik/unik.
-    Menggunakan model khusus judul.
-    """
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}'...")
     try:
         prompt = (
-            f"Ganti judul berikut agar menjadi lebih menarik, tidak vulgar, dan tetap relevan dengan topik cerita dewasa. "
+            f"Ganti judul berikut agar menjadi lebih menarik, tidak vulgar, dan tetap relevan dengan cerita dewasa dan topik aslinya. "
             f"Sertakan elemen clickbait yang memancing rasa penasaran tanpa mengurangi keamanan konten.\n\n"
             f"Judul asli: '{original_title}'\n\n"
             f"Judul baru:"
@@ -120,33 +98,24 @@ def edit_title_with_gemini(original_title):
         print(f"❌ Error saat mengedit judul dengan Gemini AI (Model Judul): {e}. Menggunakan judul asli.")
         return original_title
 
-
 def edit_first_300_words_with_gemini(post_id, post_title, full_text_content):
-    """
-    Mengirim 300 kata pertama ke Gemini AI untuk diedit,
-    dan menggabungkannya kembali dengan sisa artikel,
-    mempertahankan format paragraf sisa artikel.
-    Menggunakan model khusus konten.
-    """
     words = full_text_content.split()
 
     if len(words) < 50:
         print(f"[{post_id}] Artikel terlalu pendek (<50 kata) untuk diedit oleh Gemini AI. Melewati pengeditan.")
         return full_text_content
 
-    # Menghitung karakter untuk 300 kata pertama, termasuk spasi
     char_count_for_300_words = 0
     word_count = 0
     for i, word in enumerate(words):
         if word_count < 300:
             char_count_for_300_words += len(word)
-            if i < len(words) - 1: # Tambahkan 1 untuk spasi antar kata
+            if i < len(words) - 1:
                 char_count_for_300_words += 1
             word_count += 1
         else:
             break
             
-    # Pastikan char_count_for_300_words tidak melebihi panjang string asli
     char_count_for_300_words = min(char_count_for_300_words, len(full_text_content))
 
     first_300_words_original_string = full_text_content[:char_count_for_300_words].strip()
@@ -170,7 +139,7 @@ def edit_first_300_words_with_gemini(post_id, post_title, full_text_content):
 
         final_combined_text = cleaned_edited_text.strip() + "\n\n" + rest_of_article_text.strip()
 
-        return strip_html_and_divs(final_combined_text) # Pastikan output bersih dan diformat dengan benar
+        return strip_html_and_divs(final_combined_text)
 
     except Exception as e:
         print(f"❌ Error saat mengedit dengan Gemini AI (Model Konten) untuk artikel ID: {post_id} - {e}. Menggunakan teks asli untuk bagian ini.")
@@ -178,7 +147,6 @@ def edit_first_300_words_with_gemini(post_id, post_title, full_text_content):
 
 # --- Fungsi untuk memuat dan menyimpan status postingan yang sudah diterbitkan ---
 def load_published_posts_state():
-    """Memuat ID postingan yang sudah diterbitkan dari file state."""
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, 'r') as f:
             try:
@@ -189,14 +157,10 @@ def load_published_posts_state():
     return set()
 
 def save_published_posts_state(published_ids):
-    """Menyimpan ID postingan yang sudah diterbitkan ke file state."""
     with open(STATE_FILE, 'w') as f:
         json.dump(list(published_ids), f)
 
 def load_image_urls(file_path):
-    """
-    Memuat daftar URL gambar dari file JSON.
-    """
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             try:
@@ -215,18 +179,12 @@ def load_image_urls(file_path):
         return []
 
 def get_random_image_url(image_urls):
-    """
-    Memilih URL gambar secara acak dari daftar.
-    """
     if image_urls:
         return random.choice(image_urls)
     return None
 
 # === Fungsi untuk Mengirim Post ke WordPress Target ===
 def publish_post_to_wordpress(wp_api_url, title, content_html, username, app_password, random_image_url=None, post_status='publish'):
-    """
-    Menerbitkan postingan ke WordPress REST API.
-    """
     print(f"🚀 Menerbitkan '{title}' ke WordPress: {wp_api_url}...")
 
     final_content_for_wp = content_html
@@ -239,8 +197,6 @@ def publish_post_to_wordpress(wp_api_url, title, content_html, username, app_pas
         'title': title,
         'content': final_content_for_wp,
         'status': post_status,
-        # 'categories': [1, 2], # Opsional: ID kategori jika ada
-        # 'tags': [10, 20], # Opsional: ID tag jika ada
     }
 
     auth = requests.auth.HTTPBasicAuth(username, app_password)
@@ -269,13 +225,8 @@ def publish_post_to_wordpress(wp_api_url, title, content_html, username, app_pas
         print(f"❌ Terjadi kesalahan tak terduga saat memposting ke WordPress: {e}")
         return None
 
-
 # === Ambil semua postingan dari WordPress Self-Hosted REST API (SUMBER) ===
 def fetch_raw_posts():
-    """
-    Mengambil semua postingan mentah (ID, judul, konten, tanggal) dari WordPress sumber
-    tanpa pengeditan atau pembersihan mendalam.
-    """
     all_posts_data = []
     page = 1
     per_page_limit = 100
@@ -291,7 +242,7 @@ def fetch_raw_posts():
             'per_page': per_page_limit,
             'page': page,
             'status': 'publish',
-            '_fields': 'id,title,content,date' # Hanya ambil bidang yang relevan
+            '_fields': 'id,title,content,date'
         }
         try:
             res = requests.get(API_SOURCE_URL, params=params, headers=headers, timeout=30)
@@ -337,25 +288,21 @@ if __name__ == '__main__':
     print(f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}] Starting WordPress to WordPress publishing process...")
     print(f"🚀 Mengambil artikel dari WordPress SUMBER: {API_SOURCE_URL}.")
     print(f"🎯 Akan memposting ke WordPress TARGET: {WP_TARGET_API_URL}.")
-    print("🤖 Fitur Pengeditan Judul dan Konten (300 kata pertama) oleh Gemini AI DIAKTIFKAN (menggunakan 2 API Key terpisah).")
+    print("🤖 Fitur Pengeditan Judul dan Konten (300 kata pertama) oleh Gemini AI DIAKTIFKAN (menggunakan 1 API Key saja).") # Log diperbarui
     print("🖼️ Mencoba menambahkan gambar acak di awal konten.")
 
     try:
-        # 1. Muat daftar postingan yang sudah diterbitkan
         published_ids = load_published_posts_state()
         print(f"Ditemukan {len(published_ids)} postingan yang sudah diterbitkan sebelumnya.")
 
-        # 2. Muat URL gambar acak
         random_image_urls = load_image_urls(RANDOM_IMAGES_FILE)
         selected_random_image = get_random_image_url(random_image_urls)
         if not selected_random_image:
             print("⚠️ Tidak ada URL gambar acak yang tersedia. Artikel akan diterbitkan tanpa gambar acak di awal.")
 
-        # 3. Ambil semua postingan mentah dari API WordPress SUMBER
-        all_posts_raw_data = fetch_raw_posts() # Menggunakan fungsi baru untuk fetch mentah
+        all_posts_raw_data = fetch_raw_posts()
         print(f"Total {len(all_posts_raw_data)} artikel ditemukan dari WordPress SUMBER.")
 
-        # 4. Filter postingan yang belum diterbitkan
         unpublished_posts = [post for post in all_posts_raw_data if str(post['id']) not in published_ids]
         print(f"Ditemukan {len(unpublished_posts)} artikel dari SUMBER yang belum diterbitkan ke TARGET.")
 
@@ -363,11 +310,8 @@ if __name__ == '__main__':
             print("\n🎉 Tidak ada artikel baru yang tersedia untuk diterbitkan hari ini. Proses selesai.")
             exit()
 
-        # 5. Urutkan postingan yang belum diterbitkan dari yang TERBARU
-        # Pastikan format tanggal sudah benar dan dapat dibandingkan
         unpublished_posts.sort(key=lambda x: datetime.datetime.fromisoformat(x['date'].replace('Z', '+00:00')), reverse=True)
 
-        # 6. Pilih satu postingan untuk diterbitkan hari ini (paling baru)
         post_to_publish_data = unpublished_posts[0]
 
         original_id = post_to_publish_data['id']
@@ -376,33 +320,27 @@ if __name__ == '__main__':
 
         print(f"🌟 Memproses dan menerbitkan artikel berikutnya: '{original_title}' (ID: {original_id}) dari SUMBER")
 
-        # --- TERAPKAN PENGGANTIAN KATA KHUSUS pada judul & konten SEBELUM pengeditan Gemini ---
         title_after_replacements = replace_custom_words(original_title)
         
         content_no_anchors = remove_anchor_tags(original_content)
         cleaned_formatted_content_before_gemini = strip_html_and_divs(content_no_anchors)
         content_after_replacements = replace_custom_words(cleaned_formatted_content_before_gemini)
 
-
-        # --- BARU LAKUKAN PENGEDITAN JUDUL DENGAN GEMINI AI UNTUK ARTIKEL YANG DIPILIH SAJA ---
         final_edited_title = edit_title_with_gemini(
-            title_after_replacements # Gunakan judul yang sudah diganti kata
+            title_after_replacements
         )
 
-        # --- LAKUKAN PENGEDITAN KONTEN (300 kata pertama) DENGAN GEMINI AI UNTUK ARTIKEL YANG DIPILIH SAJA ---
         final_processed_content_text = edit_first_300_words_with_gemini(
             original_id,
-            final_edited_title, # Gunakan judul yang sudah diedit Gemini untuk logging
-            content_after_replacements # Gunakan konten yang sudah diganti kata
+            final_edited_title,
+            content_after_replacements
         )
         
-        # Konversi double newline menjadi tag paragraf HTML
         final_post_content_html = final_processed_content_text.replace('\n\n', '<p></p>') 
 
-        # 7. Terbitkan ke WordPress TARGET
         published_result = publish_post_to_wordpress(
             WP_TARGET_API_URL,
-            final_edited_title, # Menggunakan judul yang sudah diedit Gemini
+            final_edited_title,
             final_post_content_html, 
             WP_USERNAME,
             WP_APP_PASSWORD,
@@ -410,7 +348,6 @@ if __name__ == '__main__':
         )
         
         if published_result:
-            # 8. Tambahkan ID postingan (dari SUMBER) ke daftar yang sudah diterbitkan dan simpan state
             published_ids.add(str(original_id))
             save_published_posts_state(published_ids)
             print(f"✅ State file '{STATE_FILE}' diperbarui dengan ID post dari SUMBER: {original_id}.")
