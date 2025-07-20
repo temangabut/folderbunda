@@ -81,7 +81,7 @@ def edit_title_with_gemini(original_title):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}'...")
     try:
         prompt = (
-            f"Saya membutuhkan satu judul baru yang lebih menarik, tidak vulgar, dan tetap relevan dengan CERITA DEWASA DAN topik aslinya. "
+            f"Saya membutuhkan satu judul baru yang lebih menarik, tidak vulgar, dan tetap relevan dengan topik aslinya dan menggunakan kata Cerita Dewasa kedalamnya. "
             f"Judul harus clickbait yang memancing rasa penasaran tanpa mengurangi keamanan konten. "
             f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
             f"Judul asli: '{original_title}'\n\n"
@@ -126,9 +126,14 @@ def edit_first_300_words_with_gemini(post_id, post_title, full_text_content):
 
     try:
         prompt = (
-            f"Cerita Berikut adalah cuplikan dari 300 kata pertama dari cerita utuhnya "
-            f"Paraphrase signifikan setiap kata, sehingga 300 kata pertama ini beda dari aslinya, gunakan bahasa informal dan lugas :\n\n"
+            f"Saya ingin Anda menulis ulang paragraf pembuka dari sebuah cerita. "
+            f"Tujuannya adalah untuk membuat narasi yang mengalir, menarik perhatian pembaca, dan mempertahankan inti cerita asli, "
+            f"tetapi dengan gaya bahasa yang lebih halus dan sopan, menghindari bahasa yang eksplisit atau vulgar. "
+            f"Paragraf harus tetap panjangnya sekitar 300 kata dari teks asli, tetapi dengan kosakata dan struktur kalimat yang diubah secara signifikan. "
+            f"Gunakan gaya informal dan lugas. Pastikan tidak ada konten yang melanggar pedoman keamanan.\n\n"
+            f"Berikut adalah paragraf aslinya:\n\n"
             f"{first_300_words_original_string}"
+            f"\n\nParagraf yang ditulis ulang:"
         )
 
         response = gemini_model_content.generate_content(prompt)
