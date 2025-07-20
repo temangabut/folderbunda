@@ -24,9 +24,10 @@ jobs:
         python-version: '3.x'
 
     - name: 📦 Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests google-generativeai --upgrade markdown # Pastikan semua dependensi ada di sini
+  run: |
+    python -m pip install --upgrade pip
+    # Instal semua paket yang dibutuhkan, dan pastikan google-generativeai di-upgrade
+    pip install requests google-generativeai markdown --upgrade
 
     - name: 🖼️ Prepare Random Images List (if applicable)
       # Ini akan membuat file kosong jika tidak ada, agar script tidak error
