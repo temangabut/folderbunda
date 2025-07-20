@@ -10,7 +10,7 @@ import google.generativeai as genai
 
 # --- Konfigurasi ---
 # URL API WORDPRESS SUMBER (tempat artikel diambil)
-API_SOURCE_URL = "https://ngocoks.com/wp-json/wp/v2/posts"
+API_SOURCE_URL = "https://kisah69.blog/wp-json/wp/v2/posts"
 # URL API WORDPRESS TARGET (tempat artikel akan diposting)
 WP_TARGET_API_URL = "https://cerita.mywp.info/wp-json/wp/v2/posts"
 
@@ -103,7 +103,7 @@ def edit_title_with_gemini(original_title):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}'...")
     try:
         prompt = (
-            f"Ganti judul berikut agar menjadi lebih menarik, tidak vulgar, dan tetap relevan dengan topik aslinya. "
+            f"Ganti judul berikut agar menjadi lebih menarik, tidak vulgar, dan tetap relevan dengan topik cerita dewasa. "
             f"Sertakan elemen clickbait yang memancing rasa penasaran tanpa mengurangi keamanan konten.\n\n"
             f"Judul asli: '{original_title}'\n\n"
             f"Judul baru:"
