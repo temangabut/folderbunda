@@ -1,0 +1,62 @@
+name: Publish Daily WordPress Article 🚀
+
+on:
+  # Schedule the workflow to run daily at 00:00 UTC (7:00 AM WIB)
+  schedule:
+    - cron: '0 0 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  publish_article:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: ⬇️ Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Use the latest Python 3 version
+
+    - name: 📦 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests google-generativeai markdown # Add any other dependencies if you have them, e.g., python-dotenv if you test locally with .env
+        # If you were using python-dotenv for local testing, make sure it's not needed for the workflow,
+        # or install it here if your script expects it (though for GitHub Secrets, it's not strictly necessary).
+
+    - name: 📂 Cache Published Posts State
+      uses: actions/cache@v4
+      with:
+        path: artikel_terbit.json # This is your state file
+        key: ${{ runner.os }}-artikel-state-${{ hashFiles('artikel_terbit.json') }}
+        restore-keys: |
+          ${{ runner.os }}-artikel-state-
+
+    - name: 🖼️ Prepare Random Images List (if applicable)
+      # This step assumes random_images.json is committed to your repository.
+      # If you generate it dynamically or pull it from elsewhere, adjust this step.
+      run: |
+        if [ ! -f random_images.json ]; then
+          echo "[]" > random_images.json
+          echo "::warning::random_images.json not found. Creating an empty one. Add your image URLs there!"
+        fi
+
+    - name: 🚀 Run Article Publisher Script
+      env:
+        GEMINI_API_KEY_CONTENT: ${{ secrets.GEMINI_API_KEY_CONTENT }}
+        GEMINI_API_KEY_TITLE: ${{ secrets.GEMINI_API_KEY_TITLE }}
+        WP_USERNAME: ${{ secrets.WP_USERNAME }}
+        WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+      run: |
+        python cerita.py # Replace 'your_script_name.py' with the actual name of your Python file (e.g., main.py, publisher.py)
+
+    - name: ⬆️ Upload Updated Published Posts State
+      uses: actions/upload-artifact@v4
+      with:
+        name: artikel-terbit-state
+        path: artikel_terbit.json
+      # This step is mainly for debugging/reviewing the state file from workflow runs.
+      # The cache step handles restoring it for subsequent runs.
