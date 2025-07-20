@@ -17,9 +17,9 @@ RANDOM_IMAGES_FILE = 'random_images.json'
 
 # --- Konfigurasi Gemini API (Satu Key Saja) ---
 # Gunakan hanya satu API key untuk semua operasi Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_CONTENT") # <-- Kita akan menggunakan ini saja
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_TITLE") # <-- Kita akan menggunakan ini saja
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY_CONTENT environment variable not set. Please set it in your GitHub Secrets or local environment.")
+    raise ValueError("GEMINI_API_KEY_TITLE environment variable not set. Please set it in your GitHub Secrets or local environment.")
 
 # Konfigurasi API key secara global untuk semua model Gemini
 genai.configure(api_key=GEMINI_API_KEY)
@@ -81,8 +81,9 @@ def edit_title_with_gemini(original_title):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}'...")
     try:
         prompt = (
-            f"Ganti judul berikut agar menjadi lebih menarik, tidak vulgar, dan tetap relevan dengan cerita dewasa dan topik aslinya. "
-            f"Sertakan elemen clickbait yang memancing rasa penasaran tanpa mengurangi keamanan konten.\n\n"
+            f"Saya membutuhkan satu judul baru yang lebih menarik, tidak vulgar, dan tetap relevan dengan CERITA DEWASA DAN topik aslinya. "
+            f"Judul harus clickbait yang memancing rasa penasaran tanpa mengurangi keamanan konten. "
+            f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
             f"Judul asli: '{original_title}'\n\n"
             f"Judul baru:"
         )
