@@ -1,11 +1,10 @@
 name: Publish Daily WordPress Article 🚀
 
 on:
-  # Schedule the workflow to run daily at 00:00 UTC (7:00 AM WIB)
   schedule:
+    # Runs every day at 00:00 UTC (7:00 AM WIB)
     - cron: '0 0 * * *'
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
 
 jobs:
   publish_article:
@@ -14,34 +13,35 @@ jobs:
     steps:
     - name: ⬇️ Checkout Repository
       uses: actions/checkout@v4
+      with:
+        # Penting: Checkout dengan token yang memiliki izin push
+        # GITHUB_TOKEN memiliki izin ini secara default untuk private repos
+        token: ${{ secrets.GITHUB_TOKEN }} 
 
     - name: 🐍 Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x' # Use the latest Python 3 version
+        python-version: '3.x'
 
     - name: 📦 Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests google-generativeai markdown # Add any other dependencies if you have them, e.g., python-dotenv if you test locally with .env
-        # If you were using python-dotenv for local testing, make sure it's not needed for the workflow,
-        # or install it here if your script expects it (though for GitHub Secrets, it's not strictly necessary).
-
-    - name: 📂 Cache Published Posts State
-      uses: actions/cache@v4
-      with:
-        path: artikel_terbit.json # This is your state file
-        key: ${{ runner.os }}-artikel-state-${{ hashFiles('artikel_terbit.json') }}
-        restore-keys: |
-          ${{ runner.os }}-artikel-state-
+        pip install requests google-generativeai markdown # Pastikan semua dependensi ada di sini
 
     - name: 🖼️ Prepare Random Images List (if applicable)
-      # This step assumes random_images.json is committed to your repository.
-      # If you generate it dynamically or pull it from elsewhere, adjust this step.
+      # Ini akan membuat file kosong jika tidak ada, agar script tidak error
       run: |
         if [ ! -f random_images.json ]; then
           echo "[]" > random_images.json
           echo "::warning::random_images.json not found. Creating an empty one. Add your image URLs there!"
+        fi
+        
+    - name: 📄 Ensure State File Exists
+      # Ini akan membuat file artikel_terbit.json kosong jika belum ada
+      run: |
+        if [ ! -f artikel_terbit.json ]; then
+          echo "[]" > artikel_terbit.json
+          echo "::notice::artikel_terbit.json not found. Creating an empty one for the first run."
         fi
 
     - name: 🚀 Run Article Publisher Script
@@ -51,12 +51,23 @@ jobs:
         WP_USERNAME: ${{ secrets.WP_USERNAME }}
         WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
       run: |
-        python cerita.py # Replace 'your_script_name.py' with the actual name of your Python file (e.g., main.py, publisher.py)
+        python cerita.py # Ganti 'your_script_name.py' dengan nama file Python Anda
 
-    - name: ⬆️ Upload Updated Published Posts State
+    - name: 🔄 Commit and Push Updated Published State
+      # Ini akan menyimpan artikel_terbit.json yang diperbarui kembali ke repositori
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add artikel_terbit.json
+        # Perintah ini akan mencoba commit. Jika tidak ada perubahan, `|| true` akan mencegahnya gagal.
+        git commit -m "chore: Update artikel_terbit.json with new published post" || true
+        git push || true # Mencegah kegagalan jika tidak ada yang perlu di-push (misal: branch sudah up-to-date)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token bawaan GitHub untuk otentikasi push
+
+    # Opsional: Jika Anda masih ingin melihat artifact di UI GitHub Actions
+    - name: ⬆️ Upload Updated Published Posts State (for debugging)
       uses: actions/upload-artifact@v4
       with:
         name: artikel-terbit-state
         path: artikel_terbit.json
-      # This step is mainly for debugging/reviewing the state file from workflow runs.
-      # The cache step handles restoring it for subsequent runs.
