@@ -22,7 +22,7 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable not set. Please set it in your GitHub Secrets or local environment.")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# --- PERUBAHAN: Memisahkan model Gemini untuk konten dan judul ---
+# --- Memisahkan model Gemini untuk konten dan judul ---
 gemini_model_content = genai.GenerativeModel("gemini-1.5-flash") # Untuk editing konten
 gemini_model_title = genai.GenerativeModel("gemini-1.5-flash")   # Untuk editing judul
 
@@ -90,10 +90,10 @@ def edit_title_with_gemini(original_title, edited_first_300_words_context):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}' berdasarkan 300 kata pertama yang diedit...")
     try:
         prompt = (
-            f"Saya membutuhkan SATU judul baru yang sangat menarik (clickbait) dan nakal, namun tetap relevan"
+            f"Saya membutuhkan SATU judul baru yang sangat menarik (clickbait) dan tidak vulgar, tetap relevan, serta mengandung kata 'Cerita Dewasa'. "
             f"Paling penting, cari dan gunakan **peran atau pekerjaan tokoh wanita** yang mungkin disebutkan di awal cerita sebagai bagian dari judul untuk membuatnya lebih spesifik dan memancing rasa penasaran (misalnya: 'istri pejabat', 'guru', 'mahasiswi', 'dokter'). "
-            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan."
-            f"Judul harus deskriptif dan SEO Friendly\n\n"
+            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan tanpa menyinggung vulgaritas. "
+            f"Judul harus singkat dan padat.\n\n"
             f"Berikut adalah 300 kata pertama dari artikel yang sudah diedit:\n\n"
             f"```\n{edited_first_300_words_context}\n```\n\n"
             f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
@@ -200,7 +200,7 @@ def load_image_urls(file_path):
                     print(f"❌ Error: Konten '{file_path}' bukan daftar string URL yang valid.")
                     return []
             except json.JSONDecodeError:
-                print(f"❌ Error: Gagal mengurai JSON dari '{file_path}'. Pastikan formatnya benar.")
+                print(f"❌ Error: Gagal mengurai JSON dari '{file_path}'. Pasti kan formatnya benar.")
                 return []
     else:
         print(f"⚠️ Peringatan: File '{file_path}' tidak ditemukan. Tidak ada gambar acak yang akan ditambahkan.")
@@ -249,36 +249,24 @@ def get_blogger_service_with_oauth():
     return service
 
 # === Fungsi untuk Mengirim Post ke Blogger ===
-def publish_post_to_blogger(blogger_service, blog_id, title, content_markdown, tags=None, random_image_url=None):
+def publish_post_to_blogger(blogger_service, blog_id, title, content_final, tags=None, random_image_url=None):
     """
-    Menerbitkan postingan ke Blogger dari konten Markdown,
-    dengan opsi menambahkan gambar acak di awal, dan parameter <!--more--> setelah paragraf pertama.
+    Menerbitkan postingan ke Blogger dari konten yang sudah difinalisasi.
+    Menambahkan gambar acak di awal (jika ada).
+    Catatan: Parameter <!--more--> diasumsikan sudah disisipkan dalam content_final.
     """
     print(f"🚀 Menerbitkan '{title}' ke Blogger...")
 
-    # Konversi Markdown ke HTML
-    content_html = markdown.markdown(content_markdown)
-
-    # Pisahkan konten menjadi paragraf
-    paragraphs = content_html.split('\n\n')
-
     final_content_for_blogger = ""
 
-    # Tambahkan gambar acak di awal konten jika ada
+    # 1. Tambahkan gambar acak di awal konten jika ada
     if random_image_url:
         image_html = f'<p style="text-align: center;"><img src="{random_image_url}" alt="{title}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px;"></p>'
         final_content_for_blogger += image_html + "\n"
         print(f"🖼️ Gambar acak '{random_image_url}' ditambahkan ke artikel.")
 
-    # Tambahkan paragraf pertama dan parameter <!--more-->
-    if paragraphs:
-        final_content_for_blogger += paragraphs[0] + "\n\n<!--more-->\n\n"
-        print("💡 Parameter '<!--more-->' ditambahkan setelah paragraf pertama.")
-        # Tambahkan sisa paragraf setelah paragraf pertama
-        final_content_for_blogger += '\n\n'.join(paragraphs[1:])
-    else:
-        print("⚠️ Artikel tidak memiliki paragraf. Tidak ada parameter '<!--more-->' yang ditambahkan.")
-        final_content_for_blogger += content_html # Jika tidak ada paragraf, tambahkan saja konten aslinya
+    # 2. Tambahkan konten artikel yang sudah difinalisasi (sudah termasuk <!--more-->)
+    final_content_for_blogger += content_final
 
     # Buat payload postingan
     post_body = {
@@ -378,7 +366,7 @@ if __name__ == '__main__':
     print("🚀 Mengambil semua artikel WordPress self-hosted.")
     print("🤖 Fitur Pengeditan 300 Kata Pertama oleh Gemini AI DIAKTIFKAN.")
     print("🤖 Fitur Pengeditan Judul oleh Gemini AI DIAKTIFKAN.")
-    print("💡 Parameter '<!--more-->' akan ditambahkan setelah paragraf pertama.")
+    print("💡 Parameter '<!--more-->' akan ditambahkan setelah paragraf pertama dari konten yang sudah difinalisasi.") # Pesan log yang lebih jelas
     print("🖼️ Mencoba mengambil gambar pertama dari konten artikel.")
     print("Directly publishing to Blogger, no local Markdown file generation.")
 
@@ -414,6 +402,7 @@ if __name__ == '__main__':
         print(f"🌟 Memproses dan menerbitkan artikel berikutnya: '{post_to_publish.get('original_title')}' (ID: {post_to_publish.get('id')})")
 
         # LAKUKAN PENGEDITAN AI UNTUK KONTEN DAN JUDUL
+        # final_processed_content adalah hasil akhir setelah semua pembersihan dan pengeditan AI.
         final_processed_content, edited_first_300_words_context = edit_first_300_words_with_gemini(
             post_to_publish['id'],
             post_to_publish['original_title'],
@@ -425,16 +414,31 @@ if __name__ == '__main__':
             edited_first_300_words_context
         )
 
+        # Konversi final_processed_content dari Markdown ke HTML satu kali di sini
+        # Ini penting agar pemisahan paragraf berdasarkan '\n\n' konsisten dengan output Markdown.
+        content_for_blogger_html = markdown.markdown(final_processed_content)
+        paragraphs = content_for_blogger_html.split('\n\n')
+
+        # Ini adalah tempat penyisipan <!--more--> yang aman
+        content_with_more_tag = ""
+        if paragraphs:
+            content_with_more_tag += paragraphs[0] + "\n\n<!--more-->\n\n"
+            content_with_more_tag += '\n\n'.join(paragraphs[1:])
+            print("💡 Parameter '<!--more-->' berhasil disisipkan setelah paragraf pertama.")
+        else:
+            print("⚠️ Artikel tidak memiliki paragraf. Tidak ada parameter '<!--more-->' yang disisipkan.")
+            content_with_more_tag = content_for_blogger_html # Jika tidak ada paragraf, gunakan saja konten asli HTML
+
         # 7. Inisialisasi layanan Blogger menggunakan OAuth 2.0
         blogger_service = get_blogger_service_with_oauth()
 
-        # 8. Terbitkan ke Blogger dengan judul yang sudah diedit
+        # 8. Terbitkan ke Blogger dengan judul dan konten yang sudah diedit, termasuk <!--more-->
         if blogger_service and BLOGGER_BLOG_ID:
             publish_post_to_blogger(
                 blogger_service,
                 BLOGGER_BLOG_ID,
                 final_edited_title,
-                final_processed_content,
+                content_with_more_tag, # Gunakan konten yang sudah disisipi <!--more-->
                 random_image_url=selected_random_image
             )
         else:
