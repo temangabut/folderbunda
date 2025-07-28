@@ -36,12 +36,10 @@ GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 REPLACEMENT_MAP = {
     "memek": "serambi lempit",
     "kontol": "rudal",
-    "ngentot": "menggenjot",
+    "ngentot": "menyetubuhi",
     "vagina": "serambi lempit",
     "penis": "rudal",
-    "seks": "bercinta",
-    "mani": "kenikmatan",
-    "sex": "bercinta"
+    "mani": "kenikmatan"
 }
 
 # === Utilitas ===
