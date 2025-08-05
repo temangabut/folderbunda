@@ -30,7 +30,7 @@ jobs:
       env:
         # Rahasia ini HARUS kamu tambahkan di Settings -> Secrets -> Actions di repo GitHub-mu.
         # Ingat, GANTI DARI SERVICE ACCOUNT KE OAUTH 2.0 SECRETS!
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_CONTENT }}
         BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}         # Baru untuk OAuth
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }} # Baru untuk OAuth
