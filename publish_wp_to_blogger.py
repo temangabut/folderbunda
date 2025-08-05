@@ -23,22 +23,22 @@ from googleapiclient.errors import HttpError
 from google.auth.exceptions import RefreshError # Tambahkan ini
 
 # --- Variabel Rahasia yang Sudah Kamu Siapkan ---
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_CONTENT")
 BLOGGER_BLOG_ID = os.getenv("BLOGGER_BLOG_ID")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 
 # Validasi variabel penting
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable not set.")
+if not GEMINI_API_KEY_CONTENT:
+    raise ValueError("GEMINI_API_KEY_CONTENT environment variable not set.")
 if not BLOGGER_BLOG_ID:
     raise ValueError("BLOGGER_BLOG_ID environment variable not set.")
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REFRESH_TOKEN:
     raise ValueError("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or GOOGLE_REFRESH_TOKEN environment variables not set. Please ensure all are configured.")
 
 # --- Konfigurasi Gemini ---
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY_CONTENT)
 gemini_model_content = genai.GenerativeModel("gemini-1.5-flash")
 gemini_model_title = genai.GenerativeModel("gemini-1.5-flash")
 
