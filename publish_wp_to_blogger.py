@@ -23,9 +23,7 @@ from googleapiclient.errors import HttpError
 from google.auth.exceptions import RefreshError # Tambahkan ini
 
 # --- Variabel Rahasia yang Sudah Kamu Siapkan ---
-
-# Mengambil variabel dari environment
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_CONTENT")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 BLOGGER_BLOG_ID = os.getenv("BLOGGER_BLOG_ID")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -33,7 +31,7 @@ GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 
 # Validasi variabel penting
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY_CONTENT environment variable not set.")
+    raise ValueError("GEMINI_API_KEY environment variable not set.")
 if not BLOGGER_BLOG_ID:
     raise ValueError("BLOGGER_BLOG_ID environment variable not set.")
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REFRESH_TOKEN:
@@ -43,6 +41,7 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REFRESH_TOKEN:
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model_content = genai.GenerativeModel("gemini-1.5-flash")
 gemini_model_title = genai.GenerativeModel("gemini-1.5-flash")
+
 # --- Variabel dan Konstanta Lainnya (tetap sama) ---
 API_SOURCE_URL = "https://ngocoks.com/wp-json/wp/v2/posts"
 STATE_FILE = 'published_posts.json'
@@ -52,10 +51,12 @@ DEFAULT_TAGS = ["Cerita Dewasa", "Cerita Seks", "Cerita Sex", "Cerita Ngentot"]
 REPLACEMENT_MAP = {
     "memek": "serambi lempit",
     "kontol": "rudal",
-    "ngentot": "menyetubuhi",
+    "ngentot": "menggenjot",
     "vagina": "serambi lempit",
     "penis": "rudal",
-    "mani": "kenikmatan"
+    "seks": "bercinta",
+    "mani": "kenikmatan",
+    "sex": "bercinta"
 }
 
 # --- Fungsi-fungsi Pembantu (tetap sama) ---
@@ -100,9 +101,10 @@ def edit_title_with_gemini(original_title, edited_first_300_words_context):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}' berdasarkan 300 kata pertama yang diedit...")
     try:
         prompt = (
-            f"Saya membutuhkan SATU judul baru yang sangat detail dan bagus untuk SEO."
+            f"Saya membutuhkan SATU judul baru yang sangat menarik (clickbait) dan menggoda pembaca. "
             f"Paling penting, cari dan gunakan **peran atau pekerjaan tokoh wanita** yang mungkin disebutkan di awal cerita sebagai bagian dari judul untuk membuatnya lebih spesifik dan memancing rasa penasaran (misalnya: 'istri pejabat', 'guru', 'mahasiswi', 'dokter'). "
-            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan.\n\n"
+            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan tanpa menyinggung vulgaritas. "
+            f"Judul harus singkat dan padat.\n\n"
             f"Berikut adalah 300 kata pertama dari artikel yang sudah diedit:\n\n"
             f"```\n{edited_first_300_words_context}\n```\n\n"
             f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
