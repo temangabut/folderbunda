@@ -51,12 +51,10 @@ DEFAULT_TAGS = ["Cerita Dewasa", "Cerita Seks", "Cerita Sex", "Cerita Ngentot"]
 REPLACEMENT_MAP = {
     "memek": "serambi lempit",
     "kontol": "rudal",
-    "ngentot": "menggenjot",
+    "ngentot": "menyetubuhi",
     "vagina": "serambi lempit",
     "penis": "rudal",
-    "seks": "bercinta",
-    "mani": "kenikmatan",
-    "sex": "bercinta"
+    "mani": "kenikmatan"
 }
 
 # --- Fungsi-fungsi Pembantu (tetap sama) ---
@@ -104,7 +102,7 @@ def edit_title_with_gemini(original_title, edited_first_300_words_context):
             f"Saya membutuhkan SATU judul baru yang sangat menarik (clickbait) dan menggoda pembaca. "
             f"Paling penting, cari dan gunakan **peran atau pekerjaan tokoh wanita** yang mungkin disebutkan di awal cerita sebagai bagian dari judul untuk membuatnya lebih spesifik dan memancing rasa penasaran (misalnya: 'istri pejabat', 'guru', 'mahasiswi', 'dokter'). "
             f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan tanpa menyinggung vulgaritas. "
-            f"Judul harus singkat dan padat.\n\n"
+            f"Judul Harus Detail dan SEO Friendly\n\n"
             f"Berikut adalah 300 kata pertama dari artikel yang sudah diedit:\n\n"
             f"```\n{edited_first_300_words_context}\n```\n\n"
             f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
@@ -238,7 +236,7 @@ def insert_details_tag(content_text, article_url=None, article_title=None):
         encoded_article_url = quote_plus(clean_article_url)
         encoded_article_title_for_display = article_title.replace('"', '&quot;')
 
-    details_tag_start = f'<details><title>Cerita Sex Dewasa - {encoded_article_title_for_display}</title></details>\n'
+    details_tag_start = f'<details><strong>Cerita Dewasa Ngentot - {encoded_article_title_for_display}</strong></details>\n'
     details_tag_end = '\n'
     
     print(f"📝 Tag <details> akan disisipkan setelah paragraf ke-{paragraph_insert_index} (total {total_paragraphs} paragraf).")
