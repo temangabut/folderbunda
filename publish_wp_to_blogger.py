@@ -30,7 +30,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 
 # Validasi variabel penting
-if not GEMINI_API_KEY_CONTENT:
+if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY_CONTENT environment variable not set.")
 if not BLOGGER_BLOG_ID:
     raise ValueError("BLOGGER_BLOG_ID environment variable not set.")
