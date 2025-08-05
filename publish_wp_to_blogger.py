@@ -23,6 +23,8 @@ from googleapiclient.errors import HttpError
 from google.auth.exceptions import RefreshError # Tambahkan ini
 
 # --- Variabel Rahasia yang Sudah Kamu Siapkan ---
+
+# Mengambil variabel dari environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY_CONTENT")
 BLOGGER_BLOG_ID = os.getenv("BLOGGER_BLOG_ID")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -38,10 +40,9 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REFRESH_TOKEN:
     raise ValueError("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or GOOGLE_REFRESH_TOKEN environment variables not set. Please ensure all are configured.")
 
 # --- Konfigurasi Gemini ---
-genai.configure(api_key=GEMINI_API_KEY_CONTENT)
+genai.configure(api_key=GEMINI_API_KEY)
 gemini_model_content = genai.GenerativeModel("gemini-1.5-flash")
 gemini_model_title = genai.GenerativeModel("gemini-1.5-flash")
-
 # --- Variabel dan Konstanta Lainnya (tetap sama) ---
 API_SOURCE_URL = "https://ngocoks.com/wp-json/wp/v2/posts"
 STATE_FILE = 'published_posts.json'
