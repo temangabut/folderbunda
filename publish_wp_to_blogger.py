@@ -40,7 +40,7 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REFRESH_TOKEN:
 # --- Konfigurasi Gemini ---
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model_content = genai.GenerativeModel("gemini-1.5-flash")
-gemini_model_title = genai.GenerativeModel("gemini-1.5-flash")
+gemini_model_title = genai.GenerativeModel("gemini-2.5-flash")
 
 # --- Variabel dan Konstanta Lainnya (tetap sama) ---
 API_SOURCE_URL = "https://ngocoks.com/wp-json/wp/v2/posts"
@@ -54,7 +54,6 @@ REPLACEMENT_MAP = {
     "ngentot": "menyetubuhi",
     "vagina": "serambi lempit",
     "penis": "rudal",
-    "mani": "kenikmatan"
 }
 
 # --- Fungsi-fungsi Pembantu (tetap sama) ---
@@ -99,13 +98,13 @@ def edit_title_with_gemini(original_title, edited_first_300_words_context):
     print(f"🤖 Memulai pengeditan judul dengan Gemini AI (Model Judul): '{original_title}' berdasarkan 300 kata pertama yang diedit...")
     try:
         prompt = (
-            f"Saya membutuhkan SATU judul baru yang sangat menarik (clickbait) dan menggoda pembaca. "
+            f"Saya membutuhkan SATU judul baru yang sangat menarik, contoh 'Bersetubuh Dengan Pelayan Toko Cantik di Penginapan'. "
             f"Paling penting, cari dan gunakan **peran atau pekerjaan tokoh wanita** yang mungkin disebutkan di awal cerita sebagai bagian dari judul untuk membuatnya lebih spesifik dan memancing rasa penasaran (misalnya: 'istri pejabat', 'guru', 'mahasiswi', 'dokter'). "
-            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan tanpa menyinggung vulgaritas. "
-            f"Judul Harus Detail dan SEO Friendly\n\n"
+            f"Jika tidak ada peran atau pekerjaan yang jelas, buat judul yang fokus pada situasi atau hubungan. "
+            f"Judul harus detail dan jelas.\n\n"
             f"Berikut adalah 300 kata pertama dari artikel yang sudah diedit:\n\n"
             f"```\n{edited_first_300_words_context}\n```\n\n"
-            f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAU TEKS TAMBAHAN APAPUN.**\n\n"
+            f"**HANYA BERIKAN SATU JUDUL BARU, TANPA PENJELASAN ATAK TEKS TAMBAHAN APAPUN.**\n\n"
             f"Judul asli: '{original_title}'\n\n"
             f"Judul baru:"
         )
